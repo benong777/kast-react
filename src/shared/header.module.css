@@ -1,0 +1,22 @@
+.header {
+  margin-bottom: 0.3em;
+}
+
+.nav {
+  display: flex;
+  justify-content: end;
+  margin-right: 6em;
+  margin-bottom: 1em;
+  font-size: 1.2em;
+}
+
+.active {
+  color: #000000;
+  margin-left: 4em;
+}
+
+.inactive {
+  color: #777777;
+  margin-left: 4em;
+  text-decoration: none;
+}

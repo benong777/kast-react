@@ -1,0 +1,113 @@
+/* Modern CSS Reset and Root Styles */
+body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #232b38;
+  box-sizing: border-box;
+}
+
+/* App colunns */
+.app-columns {
+  display: flex;
+}
+#menu-column {
+  flex: 20%;
+  padding-left: 1rem;
+}
+#content-column {
+  flex: 80%;
+  padding-left: 10rem;
+}
+#paginationControls {
+  display: flex;
+  direction: column;
+  align-items: flex-end;
+  border: 1.5px solid red;
+}
+
+
+/* Headings */
+h1 {
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  background: blue;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2.5rem;
+}
+
+/* Inputs */
+input[type='text'], input[type='email'], input[type='password'] {
+  font-family: inherit;
+  font-size: 1.0em;
+  padding: 0.5em 1.1em;
+  margin: .25em 0 .3em 0;
+  background: #f3f5f9;
+  color: #232b38;
+  border: 1.5px solid #e3e8ee;
+  border-radius: 7px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 1px 3px rgba(60, 60, 100, .03);
+  width: 96%;
+  max-width: 340px;
+  display: block;
+}
+
+input[type='text']:focus, input[type='email']:focus, input[type='password']:focus {
+  outline: none;
+  border-color: #6c63ff;
+  box-shadow: 0 0 0 2px #0acffe44;
+}
+
+/* Selects */
+select {
+  font-family: inherit;
+  font-size: 1.0em;
+  padding: 0.5em 1.0em;
+  margin: .2em .6em .9em 0;
+  background: #f3f5f9;
+  color: #232b38;
+  border: 1.5px solid #e3e8ee;
+  border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(60,60,100, .02);
+  transition: border 0.2s, box-shadow 0.18s;
+}
+
+select:focus {
+  border-color: #6c63ff;
+  outline: none;
+  box-shadow: 0 0 0 2px #0acffe33;
+}
+
+/* Labels */
+label {
+  display: block;
+  margin-bottom: 0.3em;
+  font-size: 1.0em;
+  font-weight: 500;
+  color: #4b5475;
+}
+
+hr {
+  border: none;
+  border-top: 1.5px solid #ececec;
+  margin: 2.2em 0 2.2em 0;
+}
+
+/* Responsive tweaks */
+@media (max-width: 680px) {
+  div {
+    padding: 1.3rem 0.7rem;
+    margin: 1.3rem 4px;
+    max-width: 98vw;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+}
