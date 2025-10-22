@@ -3,11 +3,13 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Map, useMapsLibrary, AdvancedMarker } from "@vis.gl/react-google-maps";
 import axios from "axios";
 import styles from "./LocationDetails.module.css";
+import { useAuth } from "../context/AuthContext";
 
-// Simulate current user ID (normally you'd get this from Auth context or decoded JWT)
 const CURRENT_USER_ID = "68f164636e0d95c4169446ba";
 
-const LocationDetails = ({ isApiLoaded }) => {
+const LocationDetails = () => {
+  const { user, token, logout } = useAuth();
+
   const places = useMapsLibrary("places");
   const { placeId } = useParams();
   const locationState = useLocation();
@@ -23,9 +25,9 @@ const LocationDetails = ({ isApiLoaded }) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  // 🗺️ Step 1: Load place info
+  // Load place info
   useEffect(() => {
-    if (!isApiLoaded) return;
+    if (!places) return; // wait for Places API
 
     if (locationState.state?.location) {
       setCenter(locationState.state.location);
@@ -50,13 +52,14 @@ const LocationDetails = ({ isApiLoaded }) => {
         }
       );
     }
-  }, [placeId, locationState.state, isApiLoaded]);
+  }, [placeId, locationState.state, places]);
 
-  // Helper: fetch comments
+  // Fetch comments
   const fetchComments = async (locationId) => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE}/locations/${locationId}/comments`, {
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_TOKEN}` },
+        // headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setComments(res.data.comments || []);
     } catch (err) {
@@ -65,14 +68,14 @@ const LocationDetails = ({ isApiLoaded }) => {
     }
   };
 
-  // 🧩 Step 2: Check or create location
+  // Check or create location after place info loaded
   useEffect(() => {
-    if (!isApiLoaded || !placeId || !center || !placeName) return;
+    if (!places || !placeId || !center || !placeName) return;
 
     const fetchOrCreateLocation = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_BASE}/locations/${placeId}`, {
-          headers: { Authorization: `Bearer ${import.meta.env.VITE_TOKEN}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (res.data?.location) {
@@ -98,7 +101,7 @@ const LocationDetails = ({ isApiLoaded }) => {
           address: "TEST",
         };
         const res = await axios.post(`${import.meta.env.VITE_API_BASE}/locations`, body, {
-          headers: { Authorization: `Bearer ${import.meta.env.VITE_TOKEN}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         setLocationDoc(res.data.location);
@@ -109,20 +112,17 @@ const LocationDetails = ({ isApiLoaded }) => {
     };
 
     fetchOrCreateLocation();
-  }, [isApiLoaded, placeId, center, placeName]);
+  }, [places, placeId, center, placeName]);
 
-  // 🔍 Step 3: Handle searching another place
+  // Setup search autocomplete with new Places API
   useEffect(() => {
     if (!places || !inputRef.current) return;
 
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        fields: ["place_id", "geometry", "name"],
-      }
-    );
+    const autocomplete = new places.Autocomplete(inputRef.current, {
+      fields: ["place_id", "geometry", "name"],
+    });
 
-    autocomplete.addListener("place_changed", () => {
+    const onPlaceChanged = () => {
       const place = autocomplete.getPlace();
       if (!place.place_id || !place.geometry) return;
 
@@ -130,14 +130,16 @@ const LocationDetails = ({ isApiLoaded }) => {
       navigate(`/location/${place.place_id}`, {
         state: { location: { lat: loc.lat(), lng: loc.lng() }, name: place.name },
       });
-    });
+    };
+
+    autocomplete.addListener("place_changed", onPlaceChanged);
 
     return () => {
       window.google.maps.event.clearInstanceListeners(autocomplete);
     };
   }, [places, navigate]);
 
-  // 💬 Step 4: Handle new comment submission
+  // Handle new comment submission
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !locationDoc?._id) return;
@@ -147,7 +149,7 @@ const LocationDetails = ({ isApiLoaded }) => {
       await axios.post(
         `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments`,
         { comment: newComment },
-        { headers: { Authorization: `Bearer ${import.meta.env.VITE_TOKEN}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setNewComment("");
@@ -166,7 +168,7 @@ const LocationDetails = ({ isApiLoaded }) => {
       await axios.patch(
         `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`,
         { comment: editText },
-        { headers: { Authorization: `Bearer ${import.meta.env.VITE_TOKEN}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setEditingCommentId(null);
       setEditText("");
@@ -182,7 +184,7 @@ const LocationDetails = ({ isApiLoaded }) => {
     if (!window.confirm("Are you sure you want to delete this comment?")) return;
     try {
       await axios.delete(`${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_TOKEN}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       await fetchComments(locationDoc._id);
     } catch (err) {
@@ -191,15 +193,27 @@ const LocationDetails = ({ isApiLoaded }) => {
     }
   };
 
+
   if (!center) return <p>Loading...</p>;
 
   return (
     <div className={styles.container}>
-      {/* Left column: details and comments */}
       <div className={styles.leftColumn}>
         <h1 className={styles.placeName}>{placeName}</h1>
+        <button
+          onClick={logout}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 6,
+            background: "#f44336",
+            color: "#fff",
+            border: "none",
+          }}
+        >
+          Logout
+        </button>
 
-        {/* 💬 Add new comment form */}
+        {/* Comment form */}
         <form onSubmit={handleCommentSubmit} className={styles.commentForm}>
           <textarea
             value={newComment}
@@ -252,7 +266,7 @@ const LocationDetails = ({ isApiLoaded }) => {
                     </button>
                   </>
                 ) : (
-                  <span>{c.comment} comment_id: {c._id}</span>
+                  <span>{c.comment}</span>
                 )}
 
                 {/* Only show edit/delete for user's own comments */}
@@ -281,7 +295,6 @@ const LocationDetails = ({ isApiLoaded }) => {
         )}
       </div>
 
-      {/* Right column: map */}
       <div className={styles.rightColumn}>
         <input
           ref={inputRef}
