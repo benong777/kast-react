@@ -5,28 +5,44 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  //-- Load user/token from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
+
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+      setToken(savedToken);
+    }
+
+    //-- Stop showing loading screen once check is done
+    setLoading(false);
+  }, []);
+
+  //-- Sync token changes to localStorage
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
     else localStorage.removeItem("token");
   }, [token]);
 
+  //-- Sync user changes to localStorage
   useEffect(() => {
     if (user) localStorage.setItem("user", JSON.stringify(user));
     else localStorage.removeItem("user");
   }, [user]);
 
+  //-- Log in and redirect home
   const login = (userData, tokenValue) => {
     setUser(userData);
     setToken(tokenValue);
     navigate("/");
   };
 
+  //-- Log out and redirect to login
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -36,8 +52,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
-      {children}
+    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+      {/* Avoid flicker while checking auth */}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
