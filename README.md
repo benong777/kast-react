@@ -1,6 +1,6 @@
 # CTD - Kast-React
 
-This app ...  Future features will include ...
+This app allows users to search for a location to view/post status updates. 
 
 
 ## Expanding the ESLint configuration

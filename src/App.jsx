@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/notFound";
 import { useState } from "react";
+import PublicRoute from "./routes/PublicRoute";
 
 const ProtectedRoute = ({ element }) => {
   const { token } = useAuth();
@@ -31,9 +32,11 @@ const AppContent = () => {
       {loadError && <p>Error loading Google Maps API. Please try again later.</p>}
       {isApiLoaded && (
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Public routes — redirect if logged in */}
+          <Route path="/login"element={<PublicRoute element={<Login />} />} />
+          <Route path="/register" element={<PublicRoute element={<Register />} />} />
 
+          {/* Protected routes */}
           <Route path="/" element={<ProtectedRoute element={<Home />} />} />
           <Route path="/location/:placeId" element={<ProtectedRoute element={<LocationDetails />} />} />
 
