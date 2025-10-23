@@ -6,7 +6,6 @@ const Header = ({ title }) => {
   return (
     <>
       <h1 className={styles.header}>{title}</h1>
-      {/* <div className={styles.nav}> */}
         <nav className={styles.nav}>
           <NavLink 
             to="/" 
@@ -19,7 +18,6 @@ const Header = ({ title }) => {
             >About
           </NavLink>
         </nav>
-      {/* </div> */}
     </>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Map, useMapsLibrary, AdvancedMarker } from "@vis.gl/react-google-maps";
 import axios from "axios";
@@ -9,7 +9,6 @@ const CURRENT_USER_ID = "68f164636e0d95c4169446ba";
 
 const LocationDetails = () => {
   const { user, token, logout } = useAuth();
-
   const places = useMapsLibrary("places");
   const { placeId } = useParams();
   const locationState = useLocation();
@@ -25,9 +24,75 @@ const LocationDetails = () => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  // Load place info
+  //-- Fetch comments
+  const fetchComments = useCallback(async (locationId) => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE}/locations/${locationId}/comments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setComments(res.data.comments || []);
+    } catch (err) {
+      console.error("Error loading comments:", err);
+      setComments([]);
+    }
+  }, [token]);
+
+  //-- Handle new comment submission
+  const handleCommentSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !locationDoc?._id) return;
+
+    setIsSubmitting(true);
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments`,
+        { comment: newComment },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setNewComment("");
+      await fetchComments(locationDoc._id);
+    } catch (err) {
+      console.error("Error submitting comment:", err);
+      alert("Failed to post comment");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [newComment, locationDoc, token, fetchComments]);
+
+  //-- Edit comment
+  const handleEditComment = useCallback(async (commentId) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`,
+        { comment: editText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setEditingCommentId(null);
+      setEditText("");
+      await fetchComments(locationDoc._id);
+    } catch (err) {
+      console.error("Error editing comment:", err);
+      alert("Failed to edit comment");
+    }
+  }, [locationDoc, token, editText, fetchComments]);
+
+  //-- Delete comment
+  const handleDeleteComment = useCallback(async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await fetchComments(locationDoc._id);
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      alert("Failed to delete comment");
+    }
+  }, [locationDoc, token, fetchComments]);
+
+  //-- Load place info
   useEffect(() => {
-    if (!places) return; // wait for Places API
+    if (!places) return;
 
     if (locationState.state?.location) {
       setCenter(locationState.state.location);
@@ -39,10 +104,7 @@ const LocationDetails = () => {
       service.getDetails(
         { placeId, fields: ["name", "geometry"] },
         (place, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            place
-          ) {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
             setPlaceName(place.name);
             setCenter({
               lat: place.geometry.location.lat(),
@@ -54,21 +116,7 @@ const LocationDetails = () => {
     }
   }, [placeId, locationState.state, places]);
 
-  // Fetch comments
-  const fetchComments = async (locationId) => {
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE}/locations/${locationId}/comments`, {
-        // headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setComments(res.data.comments || []);
-    } catch (err) {
-      console.error("Error loading comments:", err);
-      setComments([]);
-    }
-  };
-
-  // Check or create location after place info loaded
+  //-- Check or create location
   useEffect(() => {
     if (!places || !placeId || !center || !placeName) return;
 
@@ -95,11 +143,7 @@ const LocationDetails = () => {
 
     const createLocation = async () => {
       try {
-        const body = {
-          _id: placeId,
-          name: placeName,
-          address: "TEST",
-        };
+        const body = { _id: placeId, name: placeName, address: "TEST" };
         const res = await axios.post(`${import.meta.env.VITE_API_BASE}/locations`, body, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -112,9 +156,9 @@ const LocationDetails = () => {
     };
 
     fetchOrCreateLocation();
-  }, [places, placeId, center, placeName]);
+  }, [places, placeId, center, placeName, token, fetchComments]);
 
-  // Setup search autocomplete with new Places API
+  //-- Setup search autocomplete
   useEffect(() => {
     if (!places || !inputRef.current) return;
 
@@ -133,73 +177,15 @@ const LocationDetails = () => {
     };
 
     autocomplete.addListener("place_changed", onPlaceChanged);
-
-    return () => {
-      window.google.maps.event.clearInstanceListeners(autocomplete);
-    };
+    return () => window.google.maps.event.clearInstanceListeners(autocomplete);
   }, [places, navigate]);
-
-  // Handle new comment submission
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim() || !locationDoc?._id) return;
-
-    setIsSubmitting(true);
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments`,
-        { comment: newComment },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      setNewComment("");
-      await fetchComments(locationDoc._id);
-    } catch (err) {
-      console.error("Error submitting comment:", err);
-      alert("Failed to post comment");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Edit comment
-  const handleEditComment = async (commentId) => {
-    try {
-      await axios.patch(
-        `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`,
-        { comment: editText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setEditingCommentId(null);
-      setEditText("");
-      await fetchComments(locationDoc._id);
-    } catch (err) {
-      console.error("Error editing comment:", err);
-      alert("Failed to edit comment");
-    }
-  };
-
-  // Delete comment
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm("Are you sure you want to delete this comment?")) return;
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      await fetchComments(locationDoc._id);
-    } catch (err) {
-      console.error("Error deleting comment:", err);
-      alert("Failed to delete comment");
-    }
-  };
-
 
   if (!center) return <p>Loading...</p>;
 
   return (
     <div className={styles.container}>
       <div className={styles.leftColumn}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end'}}>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <button
             onClick={logout}
             style={{
@@ -213,7 +199,8 @@ const LocationDetails = () => {
             Logout
           </button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'row', marginBottom: '28px' }}>
+
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
           <h1 className={styles.placeName}>{placeName}</h1>
         </div>
 
@@ -226,11 +213,7 @@ const LocationDetails = () => {
             rows={3}
             className={styles.commentInput}
           />
-          <button
-            type="submit"
-            className={styles.commentButton}
-            disabled={isSubmitting}
-          >
+          <button type="submit" className={styles.commentButton} disabled={isSubmitting}>
             {isSubmitting ? "Posting..." : "Post Comment"}
           </button>
         </form>
@@ -244,7 +227,7 @@ const LocationDetails = () => {
             {comments.map((c) => (
               <li key={c._id} className={styles.commentItem}>
                 <strong className={styles.commentAuthor}>
-                  {c.createdBy?.name || "Anonymous"}
+                  {c.createdBy?.name || "Anonymous"}:
                 </strong>{" "}
                 {editingCommentId === c._id ? (
                   <>
@@ -253,10 +236,7 @@ const LocationDetails = () => {
                       onChange={(e) => setEditText(e.target.value)}
                       className={styles.commentInput}
                     />
-                    <button
-                      onClick={() => handleEditComment(c._id)}
-                      className={styles.saveButton}
-                    >
+                    <button onClick={() => handleEditComment(c._id)} className={styles.saveButton}>
                       Save
                     </button>
                     <button
@@ -270,15 +250,14 @@ const LocationDetails = () => {
                     </button>
                   </>
                 ) : (
-                  <div className={styles.commentContent}>
-                    <p className={styles.commentText}>{c.comment}</p>
-                    <small className={styles.commentTimestamp}>
-                      {new Date(c.createdAt).toLocaleString()}
-                    </small>
-                  </div>
+                  <>
+                    <span>{c.comment}</span>
+                    <div className={styles.commentMeta}>
+                      <small>{new Date(c.createdAt).toLocaleString()}</small>
+                    </div>
+                  </>
                 )}
 
-                {/* Only show edit/delete for user's own comments */}
                 {c.createdBy?._id === CURRENT_USER_ID && editingCommentId !== c._id && (
                   <div className={styles.commentActions}>
                     <button
@@ -290,10 +269,7 @@ const LocationDetails = () => {
                     >
                       Edit
                     </button>
-                    <button
-                      onClick={() => handleDeleteComment(c._id)}
-                      className={styles.deleteButton}
-                    >
+                    <button onClick={() => handleDeleteComment(c._id)} className={styles.deleteButton}>
                       Delete
                     </button>
                   </div>
@@ -303,26 +279,6 @@ const LocationDetails = () => {
           </ul>
         )}
       </div>
-
-      {/* Will add back in the future */}
-      {/* <div className={styles.rightColumn}>
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Search another place..."
-          className={styles.searchInput}
-        />
-        <div className={styles.mapContainer}>
-          <Map
-            style={{ width: "100%", height: "100%" }}
-            center={center}
-            zoom={15}
-            mapId={import.meta.env.VITE_GOOGLE_MAP_ID}
-          >
-            <AdvancedMarker position={center} />
-          </Map>
-        </div>
-      </div> */}
     </div>
   );
 };
