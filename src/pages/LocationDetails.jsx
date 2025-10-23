@@ -5,8 +5,6 @@ import axios from "axios";
 import styles from "./LocationDetails.module.css";
 import { useAuth } from "../context/AuthContext";
 
-const CURRENT_USER_ID = "68f164636e0d95c4169446ba";
-
 const LocationDetails = () => {
   const { user, token, logout } = useAuth();
   const places = useMapsLibrary("places");
@@ -24,12 +22,17 @@ const LocationDetails = () => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
 
+  const currentUserId = user?._id || user?.uid || user?.id || null;
+
   //-- Fetch comments
   const fetchComments = useCallback(async (locationId) => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE}/locations/${locationId}/comments`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE}/locations/${locationId}/comments`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setComments(res.data.comments || []);
     } catch (err) {
       console.error("Error loading comments:", err);
@@ -38,57 +41,67 @@ const LocationDetails = () => {
   }, [token]);
 
   //-- Handle new comment submission
-  const handleCommentSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!newComment.trim() || !locationDoc?._id) return;
+  const handleCommentSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!newComment.trim() || !locationDoc?._id) return;
 
-    setIsSubmitting(true);
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments`,
-        { comment: newComment },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      setNewComment("");
-      await fetchComments(locationDoc._id);
-    } catch (err) {
-      console.error("Error submitting comment:", err);
-      alert("Failed to post comment");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [newComment, locationDoc, token, fetchComments]);
+      setIsSubmitting(true);
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments`,
+          { comment: newComment, userId: currentUserId, },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setNewComment("");
+        await fetchComments(locationDoc._id);
+      } catch (err) {
+        console.error("Error submitting comment:", err);
+        alert("Failed to post comment");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [currentUserId, newComment, locationDoc, token, fetchComments]
+  );
 
   //-- Edit comment
-  const handleEditComment = useCallback(async (commentId) => {
-    try {
-      await axios.patch(
-        `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`,
-        { comment: editText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setEditingCommentId(null);
-      setEditText("");
-      await fetchComments(locationDoc._id);
-    } catch (err) {
-      console.error("Error editing comment:", err);
-      alert("Failed to edit comment");
-    }
-  }, [locationDoc, token, editText, fetchComments]);
+  const handleEditComment = useCallback(
+    async (commentId) => {
+      try {
+        await axios.patch(
+          `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`,
+          { comment: editText },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEditingCommentId(null);
+        setEditText("");
+        await fetchComments(locationDoc._id);
+      } catch (err) {
+        console.error("Error editing comment:", err);
+        alert("Failed to edit comment");
+      }
+    },
+    [locationDoc, token, editText, fetchComments]
+  );
 
   //-- Delete comment
-  const handleDeleteComment = useCallback(async (commentId) => {
-    if (!window.confirm("Are you sure you want to delete this comment?")) return;
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      await fetchComments(locationDoc._id);
-    } catch (err) {
-      console.error("Error deleting comment:", err);
-      alert("Failed to delete comment");
-    }
-  }, [locationDoc, token, fetchComments]);
+  const handleDeleteComment = useCallback(
+    async (commentId) => {
+      if (!window.confirm("Are you sure you want to delete this comment?")) return;
+      try {
+        await axios.delete(
+          `${import.meta.env.VITE_API_BASE}/locations/${locationDoc._id}/comments/${commentId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await fetchComments(locationDoc._id);
+      } catch (err) {
+        console.error("Error deleting comment:", err);
+        alert("Failed to delete comment");
+      }
+    },
+    [locationDoc, token, fetchComments]
+  );
 
   //-- Load place info
   useEffect(() => {
@@ -122,9 +135,12 @@ const LocationDetails = () => {
 
     const fetchOrCreateLocation = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE}/locations/${placeId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE}/locations/${placeId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         if (res.data?.location) {
           setLocationDoc(res.data.location);
@@ -144,9 +160,11 @@ const LocationDetails = () => {
     const createLocation = async () => {
       try {
         const body = { _id: placeId, name: placeName, address: "TEST" };
-        const res = await axios.post(`${import.meta.env.VITE_API_BASE}/locations`, body, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_BASE}/locations`,
+          body,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
         setLocationDoc(res.data.location);
         fetchComments(res.data.location._id);
@@ -200,7 +218,13 @@ const LocationDetails = () => {
           </button>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "28px",
+          }}
+        >
           <h1 className={styles.placeName}>{placeName}</h1>
         </div>
 
@@ -213,7 +237,11 @@ const LocationDetails = () => {
             rows={3}
             className={styles.commentInput}
           />
-          <button type="submit" className={styles.commentButton} disabled={isSubmitting}>
+          <button
+            type="submit"
+            className={styles.commentButton}
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Posting..." : "Post Comment"}
           </button>
         </form>
@@ -236,7 +264,10 @@ const LocationDetails = () => {
                       onChange={(e) => setEditText(e.target.value)}
                       className={styles.commentInput}
                     />
-                    <button onClick={() => handleEditComment(c._id)} className={styles.saveButton}>
+                    <button
+                      onClick={() => handleEditComment(c._id)}
+                      className={styles.saveButton}
+                    >
                       Save
                     </button>
                     <button
@@ -253,27 +284,36 @@ const LocationDetails = () => {
                   <>
                     <span>{c.comment}</span>
                     <div className={styles.commentMeta}>
-                      <small>{new Date(c.createdAt).toLocaleString()}</small>
+                      <small>
+                        {c.createdAt
+                          ? new Date(c.createdAt).toLocaleString()
+                          : ""}
+                      </small>
                     </div>
                   </>
                 )}
 
-                {c.createdBy?._id === CURRENT_USER_ID && editingCommentId !== c._id && (
-                  <div className={styles.commentActions}>
-                    <button
-                      onClick={() => {
-                        setEditingCommentId(c._id);
-                        setEditText(c.comment);
-                      }}
-                      className={styles.editButton}
-                    >
-                      Edit
-                    </button>
-                    <button onClick={() => handleDeleteComment(c._id)} className={styles.deleteButton}>
-                      Delete
-                    </button>
-                  </div>
-                )}
+                {/* ✅ Only show edit/delete for this user's comments */}
+                {c.createdBy?._id === currentUserId &&
+                  editingCommentId !== c._id && (
+                    <div className={styles.commentActions}>
+                      <button
+                        onClick={() => {
+                          setEditingCommentId(c._id);
+                          setEditText(c.comment);
+                        }}
+                        className={styles.editButton}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteComment(c._id)}
+                        className={styles.deleteButton}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
               </li>
             ))}
           </ul>
