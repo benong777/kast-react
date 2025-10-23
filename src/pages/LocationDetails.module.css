@@ -107,3 +107,30 @@
   background-color: #aaa;
   cursor: not-allowed;
 }
+
+.editButton {
+  margin-top: 8px;
+  margin-right: 16px;
+}
+
+.deleteButton {
+  margin-top: 8px;
+  margin-right: 16px;
+}
+
+.commentContent {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+.commentText {
+  margin: 0;
+  font-size: 15px;
+}
+
+.commentTimestamp {
+  color: #888;
+  font-size: 12px;
+  margin-top: 2px;
+}

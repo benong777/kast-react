@@ -200,18 +200,18 @@ const LocationDetails = () => {
     <div className={styles.container}>
       <div className={styles.leftColumn}>
         <div style={{ display: 'flex', justifyContent: 'flex-end'}}>
-        <button
-          onClick={logout}
-          style={{
-            padding: "8px 12px",
-            borderRadius: 6,
-            background: "gray",
-            color: "#fff",
-            border: "none",
-          }}
-        >
-          Logout
-        </button>
+          <button
+            onClick={logout}
+            style={{
+              padding: "8px 12px",
+              borderRadius: 6,
+              background: "gray",
+              color: "#fff",
+              border: "none",
+            }}
+          >
+            Logout
+          </button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'row', marginBottom: '28px' }}>
           <h1 className={styles.placeName}>{placeName}</h1>
@@ -244,7 +244,7 @@ const LocationDetails = () => {
             {comments.map((c) => (
               <li key={c._id} className={styles.commentItem}>
                 <strong className={styles.commentAuthor}>
-                  {c.createdBy?.name || "Anonymous"}:
+                  {c.createdBy?.name || "Anonymous"}
                 </strong>{" "}
                 {editingCommentId === c._id ? (
                   <>
@@ -270,7 +270,12 @@ const LocationDetails = () => {
                     </button>
                   </>
                 ) : (
-                  <span>{c.comment}</span>
+                  <div className={styles.commentContent}>
+                    <p className={styles.commentText}>{c.comment}</p>
+                    <small className={styles.commentTimestamp}>
+                      {new Date(c.createdAt).toLocaleString()}
+                    </small>
+                  </div>
                 )}
 
                 {/* Only show edit/delete for user's own comments */}
