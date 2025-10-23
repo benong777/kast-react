@@ -199,19 +199,23 @@ const LocationDetails = () => {
   return (
     <div className={styles.container}>
       <div className={styles.leftColumn}>
-        <h1 className={styles.placeName}>{placeName}</h1>
+        <div style={{ display: 'flex', justifyContent: 'flex-end'}}>
         <button
           onClick={logout}
           style={{
             padding: "8px 12px",
             borderRadius: 6,
-            background: "#f44336",
+            background: "gray",
             color: "#fff",
             border: "none",
           }}
         >
           Logout
         </button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'row', marginBottom: '28px' }}>
+          <h1 className={styles.placeName}>{placeName}</h1>
+        </div>
 
         {/* Comment form */}
         <form onSubmit={handleCommentSubmit} className={styles.commentForm}>
@@ -295,7 +299,8 @@ const LocationDetails = () => {
         )}
       </div>
 
-      <div className={styles.rightColumn}>
+      {/* Will add back in the future */}
+      {/* <div className={styles.rightColumn}>
         <input
           ref={inputRef}
           type="text"
@@ -312,7 +317,7 @@ const LocationDetails = () => {
             <AdvancedMarker position={center} />
           </Map>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
