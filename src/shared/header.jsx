@@ -3,9 +3,11 @@ import styles from './header.module.css';
 
 
 const Header = ({ title }) => {
+  console.log(title);
   return (
     <>
       <h1 className={styles.header}>{title}</h1>
+      {/* <h1 className={styles.header}>TEST</h1> */}
         <nav className={styles.nav}>
           <NavLink 
             to="/" 

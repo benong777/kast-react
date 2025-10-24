@@ -3,8 +3,9 @@ import { Map } from "@vis.gl/react-google-maps";
 import { useNavigate } from "react-router-dom";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useAuth } from "../context/AuthContext";
+import Header from '../shared/header';
 
-const Home = ({ isApiLoaded }) => {
+const Home = ({ isApiLoaded, title }) => {
   const { logout } = useAuth();
 
   const [center, setCenter] = useState({ lat: 37.7749, lng: -122.4194 });
@@ -48,6 +49,7 @@ const Home = ({ isApiLoaded }) => {
 
   return (
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
+      <Header title={title} />
       {/* Input bound to Google Places Autocomplete */}
       <input
         ref={inputRef}

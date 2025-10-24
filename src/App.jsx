@@ -1,12 +1,13 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Home from "./pages/Home";
+import About from "./pages/about";
 import LocationDetails from "./pages/LocationDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/notFound";
-import { useState } from "react";
 import PublicRoute from "./routes/PublicRoute";
 
 const ProtectedRoute = ({ element }) => {
@@ -15,8 +16,21 @@ const ProtectedRoute = ({ element }) => {
 };
 
 const AppContent = () => {
+  const location = useLocation();
+
   const [isApiLoaded, setIsApiLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [title, setTitle] = useState('');
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      setTitle('Todo List');
+    } else if (location.pathname === '/about') {
+      setTitle('About');
+    } else {
+      setTitle('Not found.')
+    }
+  }, [location]);
 
   return (
     <APIProvider
@@ -37,7 +51,8 @@ const AppContent = () => {
           <Route path="/register" element={<PublicRoute element={<Register />} />} />
 
           {/* Protected routes */}
-          <Route path="/" element={<ProtectedRoute element={<Home />} />} />
+          <Route path="/" element={<ProtectedRoute element={<Home title={title}/>} />} />
+          <Route path="/about" element={<ProtectedRoute element={<About title={title}/>} />} />
           <Route path="/location/:placeId" element={<ProtectedRoute element={<LocationDetails />} />} />
 
           <Route path="*" element={<NotFound />} />
