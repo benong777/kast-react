@@ -57,31 +57,17 @@ const Home = ({ isApiLoaded, title }) => {
         placeholder="Search for places for latest updates..."
         style={{
           position: "absolute",
-          top: 10,
-          left: 10,
+          top: '15%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          display: 'flex',
           zIndex: 10,
-          width: "300px",
-          padding: "8px",
+          width: "500px",
+          padding: "12px",
           borderRadius: "6px",
           boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
         }}
       />
-      <button
-        onClick={logout}
-        style={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          padding: "8px 12px",
-          borderRadius: 6,
-          background: "#f44336",
-          color: "#fff",
-          border: "none",
-        }}
-      >
-        Logout
-      </button>
-
       <Map style={{ width: "100%", height: "100%" }} center={center} zoom={14} />
     </div>
   );

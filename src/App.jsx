@@ -24,7 +24,7 @@ const AppContent = () => {
 
   useEffect(() => {
     if (location.pathname === '/') {
-      setTitle('Todo List');
+      setTitle('Kast');
     } else if (location.pathname === '/about') {
       setTitle('About');
     } else {
