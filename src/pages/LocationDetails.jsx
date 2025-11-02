@@ -4,9 +4,10 @@ import { Map, useMapsLibrary, AdvancedMarker } from "@vis.gl/react-google-maps";
 import axios from "axios";
 import styles from "./LocationDetails.module.css";
 import { useAuth } from "../context/AuthContext";
+import Header from '../shared/header';
 
-const LocationDetails = () => {
-  const { user, token, logout } = useAuth();
+const LocationDetails = ({title}) => {
+  const { user, token } = useAuth();
   const places = useMapsLibrary("places");
   const { placeId } = useParams();
   const locationState = useLocation();
@@ -204,27 +205,9 @@ const LocationDetails = () => {
     <div className={styles.container}>
       <div className={styles.leftColumn}>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <button
-            onClick={logout}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 6,
-              background: "gray",
-              color: "#fff",
-              border: "none",
-            }}
-          >
-            Logout
-          </button>
+          <Header title={title} />
         </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: "28px",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
           <h1 className={styles.placeName}>{placeName}</h1>
         </div>
 
@@ -293,7 +276,7 @@ const LocationDetails = () => {
                   </>
                 )}
 
-                {/* ✅ Only show edit/delete for this user's comments */}
+                {/* Only show edit/delete for this user's comments */}
                 {c.createdBy?._id === currentUserId &&
                   editingCommentId !== c._id && (
                     <div className={styles.commentActions}>
