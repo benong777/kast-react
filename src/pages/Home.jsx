@@ -49,9 +49,7 @@ const Home = ({ isApiLoaded, title }) => {
 
   return (
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
-      <div>
       <Header title={title} />
-      </div>
       {/* Input bound to Google Places Autocomplete */}
       <input
         ref={inputRef}
