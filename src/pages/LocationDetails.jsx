@@ -238,7 +238,7 @@ const LocationDetails = ({title}) => {
             {comments.map((c) => (
               <li key={c._id} className={styles.commentItem}>
                 <strong className={styles.commentAuthor}>
-                  {c.createdBy?.name || "Anonymous"}:
+                  {c.createdBy?.name || "Anonymous"}
                 </strong>{" "}
                 {editingCommentId === c._id ? (
                   <>
