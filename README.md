@@ -1,9 +1,10 @@
 # CTD - Kast-React
 
-This app allows users to search for a location to view/post status updates. 
+This app allows users to search for a location to view/post status updates for that particular location. 
 
 
-## Expanding the ESLint configuration
+## Running the project
+* Note: A Google maps/places API key is required to run the project.
 
 1. Clone project - in a terminal, issue the following command to clone the project:
    'git clone https://github.com/benong777/kast-react.git'
