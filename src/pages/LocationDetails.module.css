@@ -175,7 +175,6 @@
   background-color: #e0e0e0;
 }
 
-/* Optional right column if you use the map later */
 .rightColumn {
   flex: 1;
   padding: 1.5rem;
@@ -185,7 +184,6 @@
   border-left: 1px solid #e0e0e0;
 }
 
-/* Search input */
 .searchInput {
   position: relative;
   z-index: 5;
@@ -203,7 +201,6 @@
   box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
 }
 
-/* Map styling */
 .mapContainer {
   flex: 1;
   border-radius: 12px;
@@ -211,7 +208,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive */
 @media (max-width: 900px) {
   .container {
     flex-direction: column;
