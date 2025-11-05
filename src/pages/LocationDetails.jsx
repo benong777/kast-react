@@ -23,7 +23,7 @@ const LocationDetails = ({title}) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  const currentUserId = user?._id || user?.uid || user?.id || null;
+  const currentUserId = user?.userId || null;
 
   //-- Fetch comments
   const fetchComments = useCallback(async (locationId) => {
